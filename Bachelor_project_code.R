@@ -1,1 +1,3 @@
-#Bachelor Project 
+#Bachelor Project --
+
+data <- mtcars
