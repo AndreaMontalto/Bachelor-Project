@@ -9,7 +9,7 @@ data2 <- read.csv('Dataset2.csv')
 str(data2) #20 different variables, however not all of them are necessary 
 
 #removing uncessary variables 
-data2_clean <- subset(data2, select = -c(Airline.Name, Aircraft, Verified, Date.Flown, Route, Wifi...Connectivity)) 
+data2_clean <- subset(data2, select = -c(Airline.Name, Aircraft, Review_Title, Verified, Date.Flown, Route, Wifi...Connectivity)) 
 str(data2_clean)
 #Checking for missing values 
 NAs_data2 <- sum(is.na(data2)) #there are 52k missing values 
@@ -51,6 +51,10 @@ for (y in 1:nrow(seat_type)) {
   data2_clean[data2_clean$ID==seat_type$ID[y],seat_type$`seat type`[y]] <- 1
 }
 
+#Removing unessary columns 
+data2_clean <- subset(data2_clean, select = -c(Type.Of.Traveller, Seat.Type))
+#changing recommended to binary 
+data2_clean$Recommended <- ifelse(data2_clean$Recommended == "yes", 1, 0)
 NA_val_dataset2 <- as.data.frame(colSums(is.na(data2_clean)))
 
 
