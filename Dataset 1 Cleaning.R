@@ -45,10 +45,48 @@ recommended_counts <- table(cleaned_dataset$recommended)
 print(recommended_counts) # There are not any other values in this column, so I can make it binary
 cleaned_dataset$recommended <- ifelse(cleaned_dataset$recommended == "yes", 1, 0)
 
+# Create ID column
+cleaned_dataset$ID <- seq_along(cleaned_dataset$recommended)
 
+#creating binary columns for the type of traveller 
+names(cleaned_dataset)[names(cleaned_dataset) == "X"] <- "ID"
+traveller_type <- subset(cleaned_dataset, select = c("ID", "traveller_type"))
 
+colnames(traveller_type) <-c('ID','traveller_type')
 
+for (c in unique(traveller_type[,2])){ 
+  cleaned_dataset[,c]<- 0
+}
+for (x in 1:nrow(traveller_type)) {
+  cleaned_dataset[cleaned_dataset$ID==traveller_type$ID[x],traveller_type$traveller_type[x]] <- 1
+}
 
+# Subset the cleaned_dataset to select the ID and cabin columns
+seat_type <- subset(cleaned_dataset, select = c("ID", "cabin"))
 
+# Sort the seat_type dataframe by the "cabin" column in descending order
+seat_type <- seat_type[order(seat_type$cabin, decreasing = TRUE), ]
+
+# Rename the column "cabin" to "seat type"
+colnames(seat_type) <- c('ID', 'seat type')
+
+# Extract unique values from the "seat type" column
+unique_seat <- unique(seat_type[2])
+
+# Initialize all columns corresponding to seat types to 0 in the cleaned_dataset
+for (v in unique(seat_type[,2])){ 
+  cleaned_dataset[, v] <- 0
+}
+
+# Assign 1 to corresponding seat type columns for each row in the cleaned_dataset
+for (y in 1:nrow(seat_type)) {
+  cleaned_dataset[cleaned_dataset$ID == seat_type$ID[y], seat_type$`seat type`[y]] <- 1
+}
+
+#Move column ID to the first position in the data set
+id_index <- which(names(cleaned_dataset) == "ID")
+
+# Move the "ID" column to the first position
+cleaned_dataset <- cleaned_dataset[, c(id_index, setdiff(1:ncol(cleaned_dataset), id_index))]
 
 
