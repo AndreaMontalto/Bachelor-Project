@@ -32,16 +32,18 @@ cleaned_dataset$date_flown <- sapply(cleaned_dataset$date_flown, convert_to_date
 
 # NOTE: Some rows have dates for column date_flown that are wrong, for example as year "2089". Do we remove these rows?
 
-# Remove column "author" from the dataset
+# Remove unnecessary columns from the dataset
 cleaned_dataset <- subset(cleaned_dataset, select = -author)
+cleaned_dataset <- subset(cleaned_dataset, select= -airline)
+cleaned_dataset <- subset(cleaned_dataset, select= -aircraft)
+cleaned_dataset <- subset(cleaned_dataset, select= -route)
+cleaned_dataset <- subset(cleaned_dataset, select= -date_flown)
 
 # Make "recommended" column binary instead of containing yes or no
 # First test whether there are more values than ys or no in this column
 recommended_counts <- table(cleaned_dataset$recommended)
 print(recommended_counts) # There are not any other values in this column, so I can make it binary
 cleaned_dataset$recommended <- ifelse(cleaned_dataset$recommended == "yes", 1, 0)
-
-
 
 
 
