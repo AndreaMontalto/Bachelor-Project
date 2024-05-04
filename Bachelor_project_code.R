@@ -21,7 +21,47 @@ library(lubridate)
 data2_clean$Overall_Rating <- as.numeric(data2_clean$Overall_Rating)
 #making date numeric
 data2_clean$Review.Date <- dmy(data2_clean$Review.Date)
-#I would consider getting rid of reviews with NA values in overall rating 
+
+#counting NAs and missing values per significant variable
+sum(is.na(data2_clean$Seat.Comfort))
+sum(is.na(data2_clean$Cabin.Staff.Service))
+sum(is.na(data2_clean$Food...Beverages))
+sum(is.na(data2_clean$Ground.Service))
+sum(is.na(data2_clean$Inflight.Entertainment))
+sum(is.na(data2_clean$Value.For.Money))
+sum(is.na(data2_clean$Recommended))
+sum(is.na(data2_clean$Overall_Rating))
+sum(is.na(data2_clean$Review.Date))
+sum(data2_clean$Type.Of.Traveller=="")
+sum(data2_clean$Seat.Type=="")
+#transforming missing values in NAs for type of traveller and seat type
+data2_clean$Type.Of.Traveller[data2_clean$Type.Of.Traveller==""]<-NA
+data2_clean$Seat.Type[data2_clean$Seat.Type==""]<-NA
+
+
+#means of significant variables
+mean_overall<-round(mean(data2_clean$Overall_Rating, na.rm=TRUE),2)
+mean_seat<-round(mean(data2_clean$Seat.Comfort, na.rm=TRUE),2)
+mean_staff<-round(mean(data2_clean$Cabin.Staff.Service, na.rm=TRUE),2)
+mean_food<-round(mean(data2_clean$Food...Beverages, na.rm=TRUE),2)
+mean_service<-round(mean(data2_clean$Ground.Service, na.rm=TRUE),2)
+mean_entrat<-round(mean(data2_clean$Inflight.Entertainment, na.rm=TRUE),2)
+mean_value<-round(mean(data2_clean$Value.For.Money, na.rm=TRUE),2)
+
+#changing NAs with means
+data2_clean<- data2_clean%>%
+  mutate(
+    Overall_Rating = ifelse(is.na(Overall_Rating), mean_overall, Overall_Rating),
+    Seat.Comfort = ifelse(is.na(Seat.Comfort), mean_seat, Seat.Comfort),
+    Cabin.Staff.Service = ifelse(is.na(Cabin.Staff.Service), mean_staff, Cabin.Staff.Service),
+    Food...Beverages = ifelse(is.na(Food...Beverages), mean_food, Food...Beverages),
+    Ground.Service = ifelse(is.na(Ground.Service), mean_service, Ground.Service),
+    Inflight.Entertainment = ifelse(is.na(Inflight.Entertainment), mean_entrat, Inflight.Entertainment),
+    Value.For.Money = ifelse(is.na(Value.For.Money), mean_value, Value.For.Money)
+  )
+
+#eliminating remaining NAs
+data2_clean<-na.omit(data2_clean)
 
 #creating binary columns for the type of traveller 
 names(data2_clean)[names(data2_clean) == "X"] <- "ID"
@@ -58,6 +98,5 @@ data2_clean$Recommended <- ifelse(data2_clean$Recommended == "yes", 1, 0)
 NA_val_dataset2 <- as.data.frame(colSums(is.na(data2_clean)))
 
 
-
-
-
+#adjusting column names
+colnames(data2_clean)<-c("ID", "Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
