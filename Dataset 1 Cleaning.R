@@ -90,3 +90,28 @@ id_index <- which(names(cleaned_dataset) == "ID")
 cleaned_dataset <- cleaned_dataset[, c(id_index, setdiff(1:ncol(cleaned_dataset), id_index))]
 
 
+
+### PART 2 ###
+
+# Check for NAs in the entire dataset
+# Count NA values in each column
+na_count_per_column <- sapply(cleaned_dataset, function(x) sum(is.na(x)))
+
+# Print the counts
+print(na_count_per_column)
+
+# We calculate the sum of columns for each row
+# Check if the sum of these columns is greater than 0
+# And subset the dataset to include only rows where at least one of the traveller type columns is 1
+# Spoiler: nothing changes
+cleaned_dataset <- cleaned_dataset[rowSums(cleaned_dataset[c("Solo Leisure", "Family Leisure", "Couple Leisure", "Business")] == 1) > 0, ]
+
+# Subset the dataset to include only rows where at least one of the cabin type columns is 1
+# Spoiler: nothing changes
+cleaned_dataset <- cleaned_dataset[rowSums(cleaned_dataset[c("Premium Economy", "First Class", "Business Class", "Economy Class")] == 1) > 0, ]
+
+
+# Remove columns ID, traveller_type and cabin 
+library(dplyr)
+cleaned_dataset <- select(cleaned_dataset, -c(ID, traveller_type, cabin))
+
