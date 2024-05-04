@@ -1,9 +1,11 @@
 #Bachelor Project --
 library(readxl)
 library(dplyr)
+library(lubridate)
 data1 <- read_xlsx('capstone_airline_reviews3.xlsx')
 data2 <- read.csv('Dataset2.csv')
 ## DATA cleaning ## 
+
 
 # Working on dataset 2# 
 str(data2) #20 different variables, however not all of them are necessary 
@@ -16,7 +18,6 @@ NAs_data2 <- sum(is.na(data2)) #there are 52k missing values
 
 
 ## DATA FORMATTING ##
-library(lubridate)
 #making numeric values actually numeric # 
 data2_clean$Overall_Rating <- as.numeric(data2_clean$Overall_Rating)
 #making date numeric
@@ -34,6 +35,7 @@ sum(is.na(data2_clean$Overall_Rating))
 sum(is.na(data2_clean$Review.Date))
 sum(data2_clean$Type.Of.Traveller=="")
 sum(data2_clean$Seat.Type=="")
+
 #transforming missing values in NAs for type of traveller and seat type
 data2_clean$Type.Of.Traveller[data2_clean$Type.Of.Traveller==""]<-NA
 data2_clean$Seat.Type[data2_clean$Seat.Type==""]<-NA
@@ -92,11 +94,130 @@ for (y in 1:nrow(seat_type)) {
 }
 
 #Removing unessary columns 
-data2_clean <- subset(data2_clean, select = -c(Type.Of.Traveller, Seat.Type))
+data2_clean <- subset(data2_clean, select = -c(Type.Of.Traveller, Seat.Type, ID))
 #changing recommended to binary 
 data2_clean$Recommended <- ifelse(data2_clean$Recommended == "yes", 1, 0)
 NA_val_dataset2 <- as.data.frame(colSums(is.na(data2_clean)))
 
 
 #adjusting column names
-colnames(data2_clean)<-c("ID", "Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
+colnames(data2_clean)<-c("Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
+
+#working on dataset 1
+
+# Remove all rows where there are NA values in all columns
+data1_clean <- data1[complete.cases(data1), ]
+
+# Put the review_date column in date format so we can use it for analyses
+data1_clean$review_date <- as.Date(data1_clean$review_date, format = "%dth %B %Y")
+data1_clean$review_date <- format(data1_clean$review_date, "%d-%m-%Y")
+data1_clean$review_date <- as.Date(data1_clean$review_date, format = "%d-%m-%Y")
+
+# Sort the dataset based on review_date, from newest to oldest
+data1_clean <- data1_clean[order(data1_clean$review_date, decreasing = TRUE), ]
+
+# Custom function to convert mixed date representations to consistent format in column "date_flown"
+convert_to_date_format <- function(date_str) {
+  # Check if the date string is numeric (assuming it's in the format "43586")
+  if (grepl("^\\d+$", date_str)) {
+    # Convert numeric string to Date object
+    date <- as.Date(as.numeric(date_str), origin = "1970-01-01")
+  } else {
+    # Convert month-year string to Date object
+    date <- as.Date(paste("01", date_str, sep = "-"), format = "%d-%B %Y")
+  }
+  # Format the date object to include only month and year ("%m-%Y")
+  formatted_date <- format(date, "%m-%Y")
+  return(formatted_date)
+}
+
+# Apply the function to the date_flown column
+data1_clean$date_flown <- sapply(data1_clean$date_flown, convert_to_date_format)
+
+# NOTE: Some rows have dates for column date_flown that are wrong, for example as year "2089". Do we remove these rows?
+
+# Remove unnecessary columns from the dataset
+data1_clean <- subset(data1_clean, select = -author)
+data1_clean <- subset(data1_clean, select= -airline)
+data1_clean <- subset(data1_clean, select= -aircraft)
+data1_clean <- subset(data1_clean, select= -route)
+data1_clean <- subset(data1_clean, select= -date_flown)
+
+# Make "recommended" column binary instead of containing yes or no
+# First test whether there are more values than ys or no in this column
+recommended_counts <- table(data1_clean$recommended)
+print(recommended_counts) # There are not any other values in this column, so I can make it binary
+data1_clean$recommended <- ifelse(data1_clean$recommended == "yes", 1, 0)
+
+# Create ID column
+data1_clean$ID <- seq_along(data1_clean$recommended)
+
+#creating binary columns for the type of traveller 
+names(data1_clean)[names(data1_clean) == "X"] <- "ID"
+traveller_type <- subset(data1_clean, select = c("ID", "traveller_type"))
+
+colnames(traveller_type) <-c('ID','traveller_type')
+
+for (c in unique(traveller_type[,2])){ 
+  data1_clean[,c]<- 0
+}
+for (x in 1:nrow(traveller_type)) {
+  data1_clean[data1_clean$ID==traveller_type$ID[x],traveller_type$traveller_type[x]] <- 1
+}
+
+# Subset the data1_clean to select the ID and cabin columns
+seat_type <- subset(data1_clean, select = c("ID", "cabin"))
+
+# Sort the seat_type dataframe by the "cabin" column in descending order
+seat_type <- seat_type[order(seat_type$cabin, decreasing = TRUE), ]
+
+# Rename the column "cabin" to "seat type"
+colnames(seat_type) <- c('ID', 'seat type')
+
+# Extract unique values from the "seat type" column
+unique_seat <- unique(seat_type[2])
+
+# Initialize all columns corresponding to seat types to 0 in the data1_clean
+for (v in unique(seat_type[,2])){ 
+  data1_clean[, v] <- 0
+}
+
+# Assign 1 to corresponding seat type columns for each row in the data1_clean
+for (y in 1:nrow(seat_type)) {
+  data1_clean[data1_clean$ID == seat_type$ID[y], seat_type$`seat type`[y]] <- 1
+}
+
+#Move column ID to the first position in the data set
+id_index <- which(names(data1_clean) == "ID")
+
+# Move the "ID" column to the first position
+data1_clean <- data1_clean[, c(id_index, setdiff(1:ncol(data1_clean), id_index))]
+
+
+
+### PART 2 ###
+
+# Check for NAs in the entire dataset
+# Count NA values in each column
+na_count_per_column <- sapply(data1_clean, function(x) sum(is.na(x)))
+
+# Print the counts
+print(na_count_per_column)
+
+# We calculate the sum of columns for each row
+# Check if the sum of these columns is greater than 0
+# And subset the dataset to include only rows where at least one of the traveller type columns is 1
+# Spoiler: nothing changes
+data1_clean <- data1_clean[rowSums(data1_clean[c("Solo Leisure", "Family Leisure", "Couple Leisure", "Business")] == 1) > 0, ]
+
+# Subset the dataset to include only rows where at least one of the cabin type columns is 1
+# Spoiler: nothing changes
+data1_clean <- data1_clean[rowSums(data1_clean[c("Premium Economy", "First Class", "Business Class", "Economy Class")] == 1) > 0, ]
+
+
+# Remove columns ID, traveller_type and cabin 
+data1_clean <- select(data1_clean, -c(ID, traveller_type, cabin))
+
+#changing column names for merging
+colnames(data1_clean)<-c( "Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
+
