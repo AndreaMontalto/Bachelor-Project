@@ -221,3 +221,10 @@ data1_clean <- select(data1_clean, -c(ID, traveller_type, cabin))
 #changing column names for merging
 colnames(data1_clean)<-c( "Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
 
+#combining data1_çclean and data2_clean in a single dataframe
+df<-rbind(data1_clean,data2_clean)
+
+#checking for duplicates and eliminating them
+duplicate_rows<-duplicated(df)
+unique_df<-df[!duplicate_rows, ]
+
