@@ -11,7 +11,7 @@ data2 <- read.csv('Dataset2.csv')
 str(data2) #20 different variables, however not all of them are necessary 
 
 #removing uncessary variables 
-data2_clean <- subset(data2, select = -c(Airline.Name, Aircraft, Review_Title, Verified, Date.Flown, Route, Wifi...Connectivity)) 
+data2_clean <- subset(data2, select = -c(Airline.Name, Aircraft, Review_Title, Verified, Route, Wifi...Connectivity)) 
 str(data2_clean)
 #Checking for missing values 
 NAs_data2 <- sum(is.na(data2)) #there are 52k missing values 
@@ -83,8 +83,8 @@ for (x in 1:nrow(traveller_type)) {
 seat_type <- subset(data2_clean, select = c("ID", "Seat.Type"))
 seat_type<- seat_type[order(seat_type$Seat.Type, decreasing = TRUE), ]
 colnames(seat_type) <- c('ID', 'seat type')
-unique_seat <- unique(seat_type[2])
-unique_seat <- subset(unique_seat, select = c("Economy Class", "Business Class"))
+unique_seat <- unique(seat_type["seat type"])
+
 for (v in unique(seat_type[,2])){ 
   data2_clean[,v]<- 0
 }
@@ -99,11 +99,21 @@ data2_clean <- subset(data2_clean, select = -c(Type.Of.Traveller, Seat.Type, ID)
 data2_clean$Recommended <- ifelse(data2_clean$Recommended == "yes", 1, 0)
 NA_val_dataset2 <- as.data.frame(colSums(is.na(data2_clean)))
 
+# Changing the format of Date.Flown column to date 
+data2_clean <- data2_clean %>%
+  mutate(Date.Flown = as.Date(paste0(Date.Flown, "-01"), format="%B %Y-%d"))
+
+# Calculate the difference between review date and flight date and filter out the rows where it's > 3 months
+data2_clean <- data2_clean %>%
+  filter(as.numeric(Review.Date - Date.Flown, units = "days") <= 91)
 
 #adjusting column names
-colnames(data2_clean)<-c("Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
+colnames(data2_clean)<-c("Overall_Rating", "Review_Date", "Review", "Date_Flown", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
 
-#working on dataset 1
+
+
+
+### WORKING ON DATASET 1 ###
 
 # Remove all rows where there are NA values in all columns
 data1_clean <- data1[complete.cases(data1), ]
@@ -141,7 +151,6 @@ data1_clean <- subset(data1_clean, select = -author)
 data1_clean <- subset(data1_clean, select= -airline)
 data1_clean <- subset(data1_clean, select= -aircraft)
 data1_clean <- subset(data1_clean, select= -route)
-data1_clean <- subset(data1_clean, select= -date_flown)
 
 # Make "recommended" column binary instead of containing yes or no
 # First test whether there are more values than ys or no in this column
@@ -194,6 +203,13 @@ id_index <- which(names(data1_clean) == "ID")
 data1_clean <- data1_clean[, c(id_index, setdiff(1:ncol(data1_clean), id_index))]
 
 
+# Converting date flown to normal date format to calculate the difference later
+data1_clean$date_flown <- as.Date(paste0("01-", data1_clean$date_flown), format="%d-%m-%Y")
+
+# Calculate the difference between the review and flight dates
+# And leave the reviews with <3 months difference
+data1_clean <- data1_clean %>%
+  filter(as.numeric(review_date - date_flown, units = "days") <= 91)
 
 ### PART 2 ###
 
@@ -219,12 +235,44 @@ data1_clean <- data1_clean[rowSums(data1_clean[c("Premium Economy", "First Class
 data1_clean <- select(data1_clean, -c(ID, traveller_type, cabin))
 
 #changing column names for merging
-colnames(data1_clean)<-c( "Overall_Rating", "Review_Date", "Review", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
+colnames(data1_clean)<-c("Overall_Rating", "Review_Date", "Review", "Date_Flown", "Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money", "Recommended", "Solo Leisure", "Couple Leisure", "Business", "Family Leisure", "Premium Economy", "First Class", "Economy Class", "Business Class")
 
-#combining data1_çclean and data2_clean in a single dataframe
+#combining data1_clean and data2_clean in a single dataframe
 df<-rbind(data1_clean,data2_clean)
 
 #checking for duplicates and eliminating them
 duplicate_rows<-duplicated(df)
 unique_df<-df[!duplicate_rows, ]
+
+
+# Add an ID column to the dataframe
+unique_df$ID <- 1:nrow(unique_df)
+
+# Reorder the columns to make ID the first column
+unique_df <- unique_df[c("ID", setdiff(names(unique_df), "ID"))]
+
+
+# Remove the flight date column as we don't need it anymore
+unique_df$Date_Flown <- NULL
+
+# Split the dataset into pre-covid and covid assuming that convid start is March 1st 
+pre_covid <- unique_df %>%
+  filter(Review_Date <= as.Date("2020-03-01"))
+covid <- unique_df %>%
+  filter(Review_Date > as.Date("2020-03-01"))
+
+
+# Create training and testing sets for both pre
+library(caret)
+set.seed(123)
+
+# Split pre_covid into training and testing sets
+partition_pre_covid <- createDataPartition(y = pre_covid$ID, p = 0.80, list = FALSE)
+training_pre_covid <- pre_covid[partition_pre_covid, ]
+testing_pre_covid <- pre_covid[-partition_pre_covid, ]
+
+# Split covid into training and testing sets
+partition_covid <- createDataPartition(y = covid$ID, p = 0.80, list = FALSE)
+training_covid <- covid[partition_covid, ]
+testing_covid <- covid[-partition_covid, ]
 
