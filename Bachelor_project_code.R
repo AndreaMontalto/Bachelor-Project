@@ -276,3 +276,91 @@ partition_covid <- createDataPartition(y = covid$ID, p = 0.80, list = FALSE)
 training_covid <- covid[partition_covid, ]
 testing_covid <- covid[-partition_covid, ]
 
+
+
+### MODEL CHECK ###
+
+# Fit the linear regression model
+model_check <- lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev + Ground_Service + Entertainment + Value_Money, 
+            data = unique_df)
+
+# Display the summary of the model to see the coefficients and other statistics
+summary(model_check)
+
+
+## LINEARITY
+# Predicted values
+predicted_values <- predict(model_check)
+
+# Residuals
+residuals <- residuals(model_check)
+
+# Plot of residuals vs. predicted values
+plot(predicted_values, residuals, main = "Residuals vs. Predicted Values", xlab = "Predicted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+
+# separating into individuals plots
+if (!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
+# Plot for Seat_Comfort
+ggplot(unique_df, aes(x = Seat_Comfort, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Residuals vs Seat Comfort", x = "Seat Comfort", y = "Residuals")
+
+# Plot for Cabin_Service
+ggplot(unique_df, aes(x = Cabin_Service, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Residuals vs Cabin Service", x = "Cabin Service", y = "Residuals")
+
+# Plot for Food_Bev
+ggplot(unique_df, aes(x = Food_Bev, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Residuals vs Food and Beverages", x = "Food and Beverages", y = "Residuals")
+
+# Plot for Ground_Service
+ggplot(unique_df, aes(x = Ground_Service, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Residuals vs Ground Service", x = "Ground Service", y = "Residuals")
+
+# Plot for Entertainment
+ggplot(unique_df, aes(x = Entertainment, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Residuals vs Entertainment", x = "Entertainment", y = "Residuals")
+
+# Plot for Value_Money
+ggplot(unique_df, aes(x = Value_Money, y = residuals)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Residuals vs Value for Money", x = "Value for Money", y = "Residuals")
+
+
+
+## MULTICOLINEARITY
+
+if (!require(car)) install.packages("car")
+library(car)
+
+# Calculate VIF
+vif_values <- vif(model_check)
+print(vif_values)
+
+
+## HOMOSKEDASITY
+
+# Scatter plot for homoskedasticity
+plot(predicted_values, residuals, main = "Homoskedasticity Check: Residuals vs. Predicted Values", xlab = "Predicted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+
+
+## NORMALITY
+# QQ plot for normality of residuals
+qqnorm(residuals)
+qqline(residuals, col = "red")
+
+
