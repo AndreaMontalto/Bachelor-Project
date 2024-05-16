@@ -364,3 +364,71 @@ qqnorm(residuals)
 qqline(residuals, col = "red")
 
 
+#Multilateral regression model
+precovid_model<-lm(Overall_Rating~Seat_Comfort+Cabin_Service+Food_Bev+Ground_Service+Entertainment+Value_Money, data = training_pre_covid)
+summary(precovid_model)
+testing_pre_covid$Pred<-predict(precovid_model, newdata=testing_pre_covid)
+
+#testing moderating variables
+moderating_model <- lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
+                         Ground_Service + Entertainment + Value_Money +
+                         `Solo Leisure` * Seat_Comfort + `Solo Leisure` * Cabin_Service + `Solo Leisure` * Food_Bev + `Solo Leisure` * Ground_Service + `Solo Leisure` * Entertainment + `Solo Leisure` * Value_Money +
+                         `Couple Leisure` * Seat_Comfort + `Couple Leisure` * Cabin_Service + `Couple Leisure` * Food_Bev + `Couple Leisure` * Ground_Service + `Couple Leisure` * Entertainment + `Couple Leisure` * Value_Money +
+                         Business * Seat_Comfort + Business * Cabin_Service + Business * Food_Bev + Business * Ground_Service + Business * Entertainment + Business * Value_Money +
+                         `Family Leisure` * Seat_Comfort + `Family Leisure` * Cabin_Service + `Family Leisure` * Food_Bev + `Family Leisure` * Ground_Service + `Family Leisure` * Entertainment + `Family Leisure` * Value_Money + 
+                         `Premium Economy` * Seat_Comfort + `Premium Economy` * Cabin_Service + `Premium Economy` * Food_Bev + `Premium Economy` * Ground_Service + `Premium Economy` * Entertainment + `Premium Economy` * Value_Money +
+                         `First Class` * Seat_Comfort +`First Class` * Cabin_Service + `First Class` * Food_Bev + `First Class` * Ground_Service + `First Class` * Entertainment + `First Class` * Value_Money + 
+                         `Economy Class` * Seat_Comfort + `Economy Class` * Cabin_Service + `Economy Class` * Food_Bev + `Economy Class` * Ground_Service + `Economy Class` * Entertainment +`Economy Class` * Value_Money +
+                         `Business Class`* Seat_Comfort + `Business Class`* Cabin_Service + `Business Class`* Food_Bev + `Business Class`* Ground_Service + `Business Class`* Entertainment + `Business Class`* Value_Money, data = training_pre_covid)
+summary(moderating_model)
+testing_pre_covid$Pred_m<-predict(moderating_model, newdata=testing_pre_covid)
+
+#evaluating predictions normal model
+MAE_pre <- mean(abs(testing_pre_covid$Pred - testing_pre_covid$Overall_Rating))
+print(MAE_pre)
+MSE_pre <- mean((testing_pre_covid$Pred - testing_pre_covid$Overall_Rating)^2)
+print(MSE_pre)
+RMSE_pre <- sqrt(MSE_pre)
+print(RMSE_pre)
+R_squared_pre <- summary(precovid_model)$r.squared
+print(R_squared_pre)
+#despite the low R_squared and high MSE the other two measures have a good low value, we can say that predictions fit acceptably
+
+#evaluating predictions moderating model
+MAE_pre_m <- mean(abs(testing_pre_covid$Pred_m - testing_pre_covid$Overall_Rating))
+print(MAE_pre_m)
+MSE_pre_m <- mean((testing_pre_covid$Pred_m - testing_pre_covid$Overall_Rating)^2)
+print(MSE_pre_m)
+RMSE_pre_m <- sqrt(MSE_pre_m)
+print(RMSE_pre_m)
+R_squared_pre_m <- summary(moderating_model)$r.squared
+print(R_squared_pre_m)
+#the moderating model predicts better than the normal model as seen by the improvement of all measures
+
+
+#predicting on covid with the model for pre-covid
+covid$Pred<-predict(moderating_model, newdata = covid)
+
+#evaluating the predictions
+MAE_post<-mean(abs(covid$Pred - covid$Overall_Rating))
+print(MAE_post)
+MSE_post <- mean((covid$Pred - covid$Overall_Rating)^2)
+print(MSE_post)
+RMSE_post <- sqrt(MSE_post)
+print(RMSE_post)
+#as we can see all measures have increased in value, demonstrating that the model does not predict well for the covid dataframe
+#H2 is accepted
+
+#creating a model based on the entire dataframe
+overall_model<-lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
+                    Ground_Service + Entertainment + Value_Money +
+                    `Solo Leisure` * Seat_Comfort + `Solo Leisure` * Cabin_Service + `Solo Leisure` * Food_Bev + `Solo Leisure` * Ground_Service + `Solo Leisure` * Entertainment + `Solo Leisure` * Value_Money +
+                    `Couple Leisure` * Seat_Comfort + `Couple Leisure` * Cabin_Service + `Couple Leisure` * Food_Bev + `Couple Leisure` * Ground_Service + `Couple Leisure` * Entertainment + `Couple Leisure` * Value_Money +
+                    Business * Seat_Comfort + Business * Cabin_Service + Business * Food_Bev + Business * Ground_Service + Business * Entertainment + Business * Value_Money +
+                    `Family Leisure` * Seat_Comfort + `Family Leisure` * Cabin_Service + `Family Leisure` * Food_Bev + `Family Leisure` * Ground_Service + `Family Leisure` * Entertainment + `Family Leisure` * Value_Money + 
+                    `Premium Economy` * Seat_Comfort + `Premium Economy` * Cabin_Service + `Premium Economy` * Food_Bev + `Premium Economy` * Ground_Service + `Premium Economy` * Entertainment + `Premium Economy` * Value_Money +
+                    `First Class` * Seat_Comfort +`First Class` * Cabin_Service + `First Class` * Food_Bev + `First Class` * Ground_Service + `First Class` * Entertainment + `First Class` * Value_Money + 
+                    `Economy Class` * Seat_Comfort + `Economy Class` * Cabin_Service + `Economy Class` * Food_Bev + `Economy Class` * Ground_Service + `Economy Class` * Entertainment +`Economy Class` * Value_Money +
+                    `Business Class`* Seat_Comfort + `Business Class`* Cabin_Service + `Business Class`* Food_Bev + `Business Class`* Ground_Service + `Business Class`* Entertainment + `Business Class`* Value_Money,data = unique_df)
+summary(overall_model)
+#we lose significance for Food_Bev from the pre_covid model
