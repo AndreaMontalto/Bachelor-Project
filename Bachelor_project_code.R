@@ -432,3 +432,52 @@ overall_model<-lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
                     `Business Class`* Seat_Comfort + `Business Class`* Cabin_Service + `Business Class`* Food_Bev + `Business Class`* Ground_Service + `Business Class`* Entertainment + `Business Class`* Value_Money,data = unique_df)
 summary(overall_model)
 #we lose significance for Food_Bev from the pre_covid model
+
+## FEATURE SELECTION ##
+install.packages("FSelectorRcpp")
+library(FSelectorRcpp)
+install.packages("infotheo")
+library(infotheo)
+
+#PRE-covid#
+#discretizise data 
+
+pre_covid$Seat_Comfort_disc <- discretize(pre_covid$Seat_Comfort, disc="equalfreq", nbins=3)
+pre_covid$Cabin_Service_disc <- discretize(pre_covid$Cabin_Service, disc="equalfreq", nbins=3)
+pre_covid$Food_Bev_disc <- discretize(pre_covid$Food_Bev, disc="equalfreq", nbins=3)
+pre_covid$Ground_Service_disc <- discretize(pre_covid$Ground_Service, disc="equalfreq", nbins=3)
+pre_covid$Entertainment_disc <- discretize(pre_covid$Entertainment, disc="equalfreq", nbins=3)
+pre_covid$Value_Money_disc <- discretize(pre_covid$Value_Money, disc="equalfreq", nbins=3)
+
+#pre_covid 
+mutual_info_seat_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Seat_Comfort_disc)
+mutual_info_cabin_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Seat_Comfort_disc)
+mutual_info_food_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Food_Bev_disc)
+mutual_info_gservice_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Ground_Service_disc)
+mutual_info_entertainment_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Entertainment_disc)
+mutual_info_money_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Value_Money_disc)
+
+mutual_info_pre_covid <- data.frame(Variables = c('cabin', 'seat','entertainment','food', 'gservice','value money'), 
+                                      IG = c(mutual_info_cabin_pre, mutual_info_seat_pre, mutual_info_entertainment_pre, mutual_info_food_pre, mutual_info_gservice_pre, mutual_info_money_pre))
+
+#COVID#
+
+#discretizize data
+covid$Seat_Comfort_disc <- discretize(covid$Seat_Comfort, disc="equalfreq", nbins=3)
+covid$Cabin_Service_disc <- discretize(covid$Cabin_Service, disc="equalfreq", nbins=3)
+covid$Food_Bev_disc <- discretize(covid$Food_Bev, disc="equalfreq", nbins=3)
+covid$Ground_Service_disc <- discretize(covid$Ground_Service, disc="equalfreq", nbins=3)
+covid$Entertainment_disc <- discretize(covid$Entertainment, disc="equalfreq", nbins=3)
+covid$Value_Money_disc <- discretize(covid$Value_Money, disc="equalfreq", nbins=3)
+
+#computing information gain
+mutual_info_seat_covid <- mutinformation(covid$Overall_Rating, covid$Seat_Comfort_disc)
+mutual_info_cabin_covid <- mutinformation(covid$Overall_Rating, covid$Seat_Comfort_disc)
+mutual_info_food_covid <- mutinformation(covid$Overall_Rating, covid$Food_Bev_disc)
+mutual_info_gservice_covid <- mutinformation(covid$Overall_Rating, covid$Ground_Service_disc)
+mutual_info_entertainment_covid <- mutinformation(covid$Overall_Rating, covid$Entertainment_disc)
+mutual_info_money_covid <- mutinformation(covid$Overall_Rating, covid$Value_Money_disc)
+
+mutual_info_covid <- data.frame(Variables = c('cabin', 'seat','entertainment','food', 'gservice','value money'), 
+                                    IG = c(mutual_info_cabin_covid, mutual_info_seat_covid, mutual_info_entertainment_covid, mutual_info_food_covid, mutual_info_gservice_covid, mutual_info_money_covid))
+
