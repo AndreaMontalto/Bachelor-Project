@@ -435,7 +435,7 @@ overall_model<-lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
                     `Economy Class` * Seat_Comfort + `Economy Class` * Cabin_Service + `Economy Class` * Food_Bev + `Economy Class` * Ground_Service + `Economy Class` * Entertainment +`Economy Class` * Value_Money +
                     `Business Class`* Seat_Comfort + `Business Class`* Cabin_Service + `Business Class`* Food_Bev + `Business Class`* Ground_Service + `Business Class`* Entertainment + `Business Class`* Value_Money,data = unique_df)
 summary(overall_model)
-<<<<<<< HEAD
+
 
 install.packages("strucchange")
 library(strucchange)
@@ -476,7 +476,7 @@ sum(unique_df$`Economy Class`==1)
 sum(unique_df$`Economy Class`==1&unique_df$Covid==1)
 sum(unique_df$`Business Class`==1)
 sum(unique_df$`Business Class`==1&unique_df$Covid==1)
-=======
+
 #we lose significance for Food_Bev from the pre_covid model
 
 ## FEATURE SELECTION ##
@@ -487,44 +487,423 @@ library(infotheo)
 
 #PRE-covid#
 #discretizise data 
+columns_to_discretize <- c("Seat_Comfort", "Cabin_Service", "Food_Bev", "Ground_Service", "Entertainment", "Value_Money")
 
-pre_covid$Seat_Comfort_disc <- discretize(pre_covid$Seat_Comfort, disc="equalfreq", nbins=3)
-pre_covid$Cabin_Service_disc <- discretize(pre_covid$Cabin_Service, disc="equalfreq", nbins=3)
-pre_covid$Food_Bev_disc <- discretize(pre_covid$Food_Bev, disc="equalfreq", nbins=3)
-pre_covid$Ground_Service_disc <- discretize(pre_covid$Ground_Service, disc="equalfreq", nbins=3)
-pre_covid$Entertainment_disc <- discretize(pre_covid$Entertainment, disc="equalfreq", nbins=3)
-pre_covid$Value_Money_disc <- discretize(pre_covid$Value_Money, disc="equalfreq", nbins=3)
+for (col in columns_to_discretize) {
+  pre_covid[[col]] <- discretize(pre_covid[[col]], disc = "equalfreq", nbins = 3)
+}
 
-#pre_covid 
-mutual_info_seat_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Seat_Comfort_disc)
-mutual_info_cabin_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Seat_Comfort_disc)
-mutual_info_food_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Food_Bev_disc)
-mutual_info_gservice_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Ground_Service_disc)
-mutual_info_entertainment_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Entertainment_disc)
-mutual_info_money_pre <- mutinformation(pre_covid$Overall_Rating, pre_covid$Value_Money_disc)
+mutual_info_list <- list()
 
-mutual_info_pre_covid <- data.frame(Variables = c('cabin', 'seat','entertainment','food', 'gservice','value money'), 
-                                      IG = c(mutual_info_cabin_pre, mutual_info_seat_pre, mutual_info_entertainment_pre, mutual_info_food_pre, mutual_info_gservice_pre, mutual_info_money_pre))
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid$Overall_Rating, pre_covid[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
 
-#COVID#
+mutual_info_pre_covid <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+{
+#Solo leisure# 
+pre_covid_solo <- pre_covid %>% 
+  filter(pre_covid$`Solo Leisure` == 1)
 
-#discretizize data
-covid$Seat_Comfort_disc <- discretize(covid$Seat_Comfort, disc="equalfreq", nbins=3)
-covid$Cabin_Service_disc <- discretize(covid$Cabin_Service, disc="equalfreq", nbins=3)
-covid$Food_Bev_disc <- discretize(covid$Food_Bev, disc="equalfreq", nbins=3)
-covid$Ground_Service_disc <- discretize(covid$Ground_Service, disc="equalfreq", nbins=3)
-covid$Entertainment_disc <- discretize(covid$Entertainment, disc="equalfreq", nbins=3)
-covid$Value_Money_disc <- discretize(covid$Value_Money, disc="equalfreq", nbins=3)
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_solo$Overall_Rating, pre_covid_solo[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
 
-#computing information gain
-mutual_info_seat_covid <- mutinformation(covid$Overall_Rating, covid$Seat_Comfort_disc)
-mutual_info_cabin_covid <- mutinformation(covid$Overall_Rating, covid$Seat_Comfort_disc)
-mutual_info_food_covid <- mutinformation(covid$Overall_Rating, covid$Food_Bev_disc)
-mutual_info_gservice_covid <- mutinformation(covid$Overall_Rating, covid$Ground_Service_disc)
-mutual_info_entertainment_covid <- mutinformation(covid$Overall_Rating, covid$Entertainment_disc)
-mutual_info_money_covid <- mutinformation(covid$Overall_Rating, covid$Value_Money_disc)
+mutual_info_pre_covid_solo <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_solo)
+#couple leisure
+pre_covid_couple <- pre_covid %>% 
+  filter(pre_covid$`Couple Leisure` == 1)
 
-mutual_info_covid <- data.frame(Variables = c('cabin', 'seat','entertainment','food', 'gservice','value money'), 
-                                    IG = c(mutual_info_cabin_covid, mutual_info_seat_covid, mutual_info_entertainment_covid, mutual_info_food_covid, mutual_info_gservice_covid, mutual_info_money_covid))
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_couple$Overall_Rating, pre_covid_couple[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
 
->>>>>>> cfe7cfd2e11e930537c13bfebb7ec4eed2fdf6f8
+mutual_info_pre_couple <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_couple)
+#business#
+pre_covid_business <- pre_covid %>% 
+  filter(pre_covid$Business == 1)
+
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_business$Overall_Rating, pre_covid_business[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
+
+mutual_info_pre_covid_business <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_business)
+#family# 
+pre_covid_family <- pre_covid %>% 
+  filter(pre_covid$`Family Leisure` == 1)
+
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_family$Overall_Rating, pre_covid_family[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
+
+mutual_info_pre_family <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_family)
+#SEAT TYPE# 
+
+#Premium economy 
+pre_covid_premium_economy <- pre_covid %>% 
+  filter(pre_covid$`Premium Economy` == 1)
+
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_premium_economy$Overall_Rating, pre_covid_premium_economy[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
+
+mutual_info_pre_covid_premium_economy <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_premium_economy)
+
+#First class
+pre_covid_first_class <- pre_covid %>% 
+  filter(pre_covid$`First Class` == 1)
+
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_first_class$Overall_Rating, pre_covid_first_class[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
+
+mutual_info_pre_covid_first_class <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_first_class)
+
+#Economy 
+pre_covid_economy <- pre_covid %>% 
+  filter(pre_covid$`Economy Class` == 1)
+
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_economy$Overall_Rating, pre_covid_economy[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
+
+mutual_info_pre_covid_economy <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_economy)
+
+#Business class 
+pre_covid_business_class <- pre_covid %>% 
+  filter(pre_covid$`Business Class` == 1)
+
+for (col in columns_to_discretize) {
+  mi_value <- mutinformation(pre_covid_business_class$Overall_Rating, pre_covid_business_class[[col]])
+  mutual_info_list[[col]] <- mi_value
+}
+
+mutual_info_pre_covid_business_class <- data.frame(
+  Variable = names(mutual_info_list),
+  MutualInformation = unlist(mutual_info_list)
+)
+rm(pre_covid_business_class)
+}
+
+#### COVID ####
+
+{
+  
+  #discretizize data
+  for (col in columns_to_discretize) {
+    covid[[col]] <- discretize(covid[[col]], disc = "equalfreq", nbins = 3)
+  }
+  
+  #computing information gain
+  mutual_info_list <- list()
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid$Overall_Rating, covid[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  
+  #Solo leisure# 
+  covid_solo <- covid %>% 
+    filter(covid$`Solo Leisure` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_solo$Overall_Rating, covid_solo[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_solo <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_solo)
+  #couple leisure
+  covid_couple <- covid %>% 
+    filter(covid$`Couple Leisure` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_couple$Overall_Rating, covid_couple[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_couple <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_couple)
+  #business#
+  covid_business <- covid %>% 
+    filter(covid$Business == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_business$Overall_Rating, covid_business[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_business <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_business)
+  #family# 
+  covid_family <- covid %>% 
+    filter(covid$`Family Leisure` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_family$Overall_Rating, covid_family[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_family <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_family)
+  #SEAT TYPE# 
+  
+  #Premium economy 
+  covid_premium_economy <- covid %>% 
+    filter(covid$`Premium Economy` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_premium_economy$Overall_Rating, covid_premium_economy[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_premium_economy <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_premium_economy)
+  
+  #First class
+  covid_first_class <- covid %>% 
+    filter(covid$`First Class` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_first_class$Overall_Rating, covid_first_class[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_first_class <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_first_class)
+  
+  #Economy 
+  covid_economy <- covid %>% 
+    filter(covid$`Economy Class` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_economy$Overall_Rating, covid_economy[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_economy <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_economy)
+  
+  #Business class 
+  covid_business_class <- covid %>% 
+    filter(covid$`Business Class` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(covid_business_class$Overall_Rating, covid_business_class[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_covid_business_class <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(covid_business_class)
+}
+
+###TOTAL##
+{
+
+  
+  #Discretizise data
+  for (col in columns_to_discretize) {
+    disc_col <- paste(col, "disc", sep = "_")
+    unique_df[[disc_col]] <- discretize(unique_df[[col]], disc = "equalfreq", nbins = 3)
+  }
+  
+  #computing information gain
+  mutual_info_list <- list()
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(unique_df$Overall_Rating, unique_df[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  
+  
+  #Solo leisure# 
+  total_solo <- unique_df %>% 
+    filter(unique_df$`Solo Leisure` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_solo$Overall_Rating, total_solo[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_solo <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_solo)
+  #couple leisure
+  total_couple <- unique_df %>% 
+    filter(unique_df$`Couple Leisure` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_couple$Overall_Rating, total_couple[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_couple <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_couple)
+  #business#
+  total_business <- unique_df %>% 
+    filter(unique_df$Business == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_business$Overall_Rating, total_business[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_business <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_business)
+  #family# 
+  total_family <- unique_df %>% 
+    filter(unique_df$`Family Leisure` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_family$Overall_Rating, total_family[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_family <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_family)
+  #SEAT TYPE# 
+  
+  #Premium economy 
+  total_premium_economy <- unique_df %>% 
+    filter(unique_df$`Premium Economy` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_premium_economy$Overall_Rating, total_premium_economy[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_premium_economy <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_premium_economy)
+  
+  #First class
+  total_first_class <- unique_df %>% 
+    filter(unique_df$`First Class` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_first_class$Overall_Rating, total_first_class[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_first_class <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_first_class)
+  
+  #Economy 
+  total_economy <- unique_df %>% 
+    filter(unique_df$`Economy Class` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_economy$Overall_Rating, total_economy[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_economy <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_economy)
+  
+  #Business class 
+  total_business_class <- unique_df %>% 
+    filter(unique_df$`Business Class` == 1)
+  
+  for (col in columns_to_discretize) {
+    mi_value <- mutinformation(total_business_class$Overall_Rating, total_business_class[[col]])
+    mutual_info_list[[col]] <- mi_value
+  }
+  
+  mutual_info_total_total_class <- data.frame(
+    Variable = names(mutual_info_list),
+    MutualInformation = unlist(mutual_info_list)
+  )
+  rm(total_business_class)
+}
