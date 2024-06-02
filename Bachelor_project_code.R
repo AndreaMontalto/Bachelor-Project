@@ -504,6 +504,7 @@ mutual_info_pre_covid <- data.frame(
   Variable = names(mutual_info_list),
   MutualInformation = unlist(mutual_info_list)
 )
+colnames(mutual_info_pre_covid) <- c('variable', 'pre_covid')
 {
 #Solo leisure# 
 pre_covid_solo <- pre_covid %>% 
@@ -519,6 +520,7 @@ mutual_info_pre_covid_solo <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_solo)
+colnames(mutual_info_pre_covid_solo) <- c('variable', 'solo leisure')
 #couple leisure
 pre_covid_couple <- pre_covid %>% 
   filter(pre_covid$`Couple Leisure` == 1)
@@ -533,6 +535,7 @@ mutual_info_pre_couple <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_couple)
+colnames(mutual_info_pre_couple) <- c('variable', 'couple leisure')
 #business#
 pre_covid_business <- pre_covid %>% 
   filter(pre_covid$Business == 1)
@@ -547,6 +550,7 @@ mutual_info_pre_covid_business <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_business)
+colnames(mutual_info_pre_covid_business) <- c('variable', 'business')
 #family# 
 pre_covid_family <- pre_covid %>% 
   filter(pre_covid$`Family Leisure` == 1)
@@ -561,6 +565,10 @@ mutual_info_pre_family <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_family)
+colnames(mutual_info_pre_family) <- c('variable', 'family leisure')
+
+mutual_info_pre_covid_traveller <- cbind(mutual_info_pre_covid_solo, mutual_info_pre_couple, mutual_info_pre_covid_business, mutual_info_pre_family)
+rm(mutual_info_pre_covid_solo, mutual_info_pre_couple, mutual_info_pre_covid_business, mutual_info_pre_family)
 #SEAT TYPE# 
 
 #Premium economy 
@@ -577,6 +585,7 @@ mutual_info_pre_covid_premium_economy <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_premium_economy)
+colnames(mutual_info_pre_covid_premium_economy) <- c('variable', 'premium economy')
 
 #First class
 pre_covid_first_class <- pre_covid %>% 
@@ -592,6 +601,8 @@ mutual_info_pre_covid_first_class <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_first_class)
+colnames(mutual_info_pre_covid_first_class) <- c('variable', 'first class')
+
 
 #Economy 
 pre_covid_economy <- pre_covid %>% 
@@ -607,6 +618,8 @@ mutual_info_pre_covid_economy <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_economy)
+colnames(mutual_info_pre_covid_economy) <- c('variable', 'economy')
+
 
 #Business class 
 pre_covid_business_class <- pre_covid %>% 
@@ -622,6 +635,11 @@ mutual_info_pre_covid_business_class <- data.frame(
   MutualInformation = unlist(mutual_info_list)
 )
 rm(pre_covid_business_class)
+colnames(mutual_info_pre_covid_business_class) <- c('variable', 'business class')
+
+
+mutual_info_pre_covid_seat <- cbind(mutual_info_pre_covid_premium_economy, mutual_info_pre_covid_first_class, mutual_info_pre_covid_economy, mutual_info_pre_covid_business_class)
+rm(mutual_info_pre_covid_premium_economy, mutual_info_pre_covid_first_class, mutual_info_pre_covid_economy, mutual_info_pre_covid_business_class)
 }
 
 #### COVID ####
@@ -660,6 +678,7 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_solo)
+  colnames(mutual_info_covid_solo) <- c('variable', 'solo')
   #couple leisure
   covid_couple <- covid %>% 
     filter(covid$`Couple Leisure` == 1)
@@ -674,6 +693,7 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_couple)
+  colnames(mutual_info_covid_couple) <- c('variable', 'couple')
   #business#
   covid_business <- covid %>% 
     filter(covid$Business == 1)
@@ -688,6 +708,7 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_business)
+  colnames(mutual_info_covid_business) <- c('variable', 'business')
   #family# 
   covid_family <- covid %>% 
     filter(covid$`Family Leisure` == 1)
@@ -702,6 +723,10 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_family)
+  colnames(mutual_info_covid_family) <- c('variable', 'family')
+  
+  mutual_info__covid_traveller <- cbind(mutual_info_covid_solo, mutual_info_covid_couple, mutual_info_covid_business, mutual_info_covid_family)
+  rm(mutual_info_covid_solo, mutual_info_covid_couple, mutual_info_covid_business, mutual_info_covid_family)
   #SEAT TYPE# 
   
   #Premium economy 
@@ -718,6 +743,7 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_premium_economy)
+  colnames(mutual_info_covid_premium_economy) <- c('variable', 'premium economy')
   
   #First class
   covid_first_class <- covid %>% 
@@ -733,6 +759,7 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_first_class)
+  colnames(mutual_info_covid_first_class) <- c('variable', 'first class')
   
   #Economy 
   covid_economy <- covid %>% 
@@ -748,6 +775,7 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_economy)
+  colnames(mutual_info_covid_economy) <- c('variable', 'economy')
   
   #Business class 
   covid_business_class <- covid %>% 
@@ -763,6 +791,10 @@ rm(pre_covid_business_class)
     MutualInformation = unlist(mutual_info_list)
   )
   rm(covid_business_class)
+  colnames(mutual_info_covid_business_class) <- c('variable', 'business class')
+  
+  mutual_info_covid_seat <- cbind(mutual_info_covid_premium_economy, mutual_info_covid_first_class, mutual_info_covid_economy, mutual_info_covid_business_class)
+  rm(mutual_info_covid_premium_economy, mutual_info_covid_first_class, mutual_info_covid_economy, mutual_info_covid_business_class)
 }
 
 ###TOTAL##
