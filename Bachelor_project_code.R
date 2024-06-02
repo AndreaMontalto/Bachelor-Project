@@ -15,7 +15,7 @@ data2_clean <- subset(data2, select = -c(Airline.Name, Aircraft, Review_Title, V
 str(data2_clean)
 #Checking for missing values 
 NAs_data2 <- sum(is.na(data2)) #there are 52k missing values 
-
+NAs_data1 <- sum(is.na(data1))
 
 ## DATA FORMATTING ##
 #making numeric values actually numeric # 
@@ -117,7 +117,7 @@ colnames(data2_clean)<-c("Overall_Rating", "Review_Date", "Review", "Date_Flown"
 
 # Remove all rows where there are NA values in all columns
 data1_clean <- data1[complete.cases(data1), ]
-
+NAs_data1 <- sum(is.na(data1_clean))
 # Put the review_date column in date format so we can use it for analyses
 data1_clean$review_date <- as.Date(data1_clean$review_date, format = "%dth %B %Y")
 data1_clean$review_date <- format(data1_clean$review_date, "%d-%m-%Y")
@@ -419,9 +419,13 @@ print(RMSE_post)
 #as we can see all measures have increased in value, demonstrating that the model does not predict well for the covid dataframe
 #H2 is accepted
 
-#creating a model based on the entire dataframe
+
+#H3 comparing covid to overall
+#creating a dummy variable for covid
+covid_start_date<- as.Date("2020-03-01")
+unique_df$Covid <- ifelse(unique_df$Review_Date >= covid_start_date, 1, 0)
 overall_model<-lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
-                    Ground_Service + Entertainment + Value_Money +
+                    Ground_Service + Entertainment + Value_Money + Covid +
                     `Solo Leisure` * Seat_Comfort + `Solo Leisure` * Cabin_Service + `Solo Leisure` * Food_Bev + `Solo Leisure` * Ground_Service + `Solo Leisure` * Entertainment + `Solo Leisure` * Value_Money +
                     `Couple Leisure` * Seat_Comfort + `Couple Leisure` * Cabin_Service + `Couple Leisure` * Food_Bev + `Couple Leisure` * Ground_Service + `Couple Leisure` * Entertainment + `Couple Leisure` * Value_Money +
                     Business * Seat_Comfort + Business * Cabin_Service + Business * Food_Bev + Business * Ground_Service + Business * Entertainment + Business * Value_Money +
@@ -431,4 +435,43 @@ overall_model<-lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
                     `Economy Class` * Seat_Comfort + `Economy Class` * Cabin_Service + `Economy Class` * Food_Bev + `Economy Class` * Ground_Service + `Economy Class` * Entertainment +`Economy Class` * Value_Money +
                     `Business Class`* Seat_Comfort + `Business Class`* Cabin_Service + `Business Class`* Food_Bev + `Business Class`* Ground_Service + `Business Class`* Entertainment + `Business Class`* Value_Money,data = unique_df)
 summary(overall_model)
-#we lose significance for Food_Bev from the pre_covid model
+
+install.packages("strucchange")
+library(strucchange)
+chow_test_result <- sctest(overall_model, type = "Chow", point = break_point)
+print(chow_test_result)
+
+covid_model<-lm(Overall_Rating ~ Seat_Comfort + Cabin_Service + Food_Bev +
+                    Ground_Service + Entertainment + Value_Money +
+                    `Solo Leisure` * Seat_Comfort + `Solo Leisure` * Cabin_Service + `Solo Leisure` * Food_Bev + `Solo Leisure` * Ground_Service + `Solo Leisure` * Entertainment + `Solo Leisure` * Value_Money +
+                    `Couple Leisure` * Seat_Comfort + `Couple Leisure` * Cabin_Service + `Couple Leisure` * Food_Bev + `Couple Leisure` * Ground_Service + `Couple Leisure` * Entertainment + `Couple Leisure` * Value_Money +
+                    Business * Seat_Comfort + Business * Cabin_Service + Business * Food_Bev + Business * Ground_Service + Business * Entertainment + Business * Value_Money +
+                    `Family Leisure` * Seat_Comfort + `Family Leisure` * Cabin_Service + `Family Leisure` * Food_Bev + `Family Leisure` * Ground_Service + `Family Leisure` * Entertainment + `Family Leisure` * Value_Money + 
+                    `Premium Economy` * Seat_Comfort + `Premium Economy` * Cabin_Service + `Premium Economy` * Food_Bev + `Premium Economy` * Ground_Service + `Premium Economy` * Entertainment + `Premium Economy` * Value_Money +
+                    `First Class` * Seat_Comfort +`First Class` * Cabin_Service + `First Class` * Food_Bev + `First Class` * Ground_Service + `First Class` * Entertainment + `First Class` * Value_Money + 
+                    `Economy Class` * Seat_Comfort + `Economy Class` * Cabin_Service + `Economy Class` * Food_Bev + `Economy Class` * Ground_Service + `Economy Class` * Entertainment +`Economy Class` * Value_Money +
+                    `Business Class`* Seat_Comfort + `Business Class`* Cabin_Service + `Business Class`* Food_Bev + `Business Class`* Ground_Service + `Business Class`* Entertainment + `Business Class`* Value_Money,data = covid)
+summary(covid_model)
+
+
+#the p-value of the covid dummy variable is significant in the overall model, showing the significant impact of covid in influencing the customers preferences in the airline industry.
+#the chow test determines whether the relationship between the DV and IVs has changed significantly due to COVID-19. since the p-value is <0.05 it demonstrates a significant structural break occured and the changes will probably last in the long-term
+
+
+#passenger by type
+sum(unique_df$`Solo Leisure`==1)
+sum(unique_df$`Solo Leisure`==1&unique_df$Covid==1)
+sum(unique_df$`Couple Leisure`==1)
+sum(unique_df$`Couple Leisure`==1&unique_df$Covid==1)
+sum(unique_df$Business==1)
+sum(unique_df$Business==1&unique_df$Covid==1)
+sum(unique_df$`Family Leisure`==1)
+sum(unique_df$`Family Leisure`==1&unique_df$Covid==1)
+sum(unique_df$`Premium Economy`==1)
+sum(unique_df$`Premium Economy`==1&unique_df$Covid==1)
+sum(unique_df$`First Class`==1)
+sum(unique_df$`First Class`==1&unique_df$Covid==1)
+sum(unique_df$`Economy Class`==1)
+sum(unique_df$`Economy Class`==1&unique_df$Covid==1)
+sum(unique_df$`Business Class`==1)
+sum(unique_df$`Business Class`==1&unique_df$Covid==1)
